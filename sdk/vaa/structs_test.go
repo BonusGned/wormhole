@@ -144,6 +144,7 @@ func TestChainIDFromString(t *testing.T) {
 		{input: "Holesky", output: ChainIDHolesky},
 		{input: "Polygon_Sepolia", output: ChainIDPolygonSepolia},
 		{input: "Monad_Devnet", output: ChainIDMonadDevnet},
+		{input: "Ultron", output: ChainIDUltron},
 	}
 
 	// Negative Test Cases
@@ -340,6 +341,7 @@ func TestChainId_String(t *testing.T) {
 		{input: 10006, output: "holesky"},
 		{input: 10007, output: "polygon_sepolia"},
 		{input: 10008, output: "monad_devnet"},
+		{input: 10009, output: "ultron"},
 		{input: 10000, output: "unknown chain ID: 10000"},
 	}
 

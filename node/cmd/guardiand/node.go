@@ -79,6 +79,9 @@ var (
 	fantomRPC      *string
 	fantomContract *string
 
+	ultronRPC      *string
+	ultronContract *string
+
 	avalancheRPC      *string
 	avalancheContract *string
 
@@ -296,7 +299,7 @@ func init() {
 	oasisRPC = node.RegisterFlagWithValidationOrFail(NodeCmd, "oasisRPC", "Oasis RPC URL", "ws://eth-devnet:8545", []string{"ws", "wss"})
 	oasisContract = NodeCmd.Flags().String("oasisContract", "", "Oasis contract address")
 
-	fantomRPC = node.RegisterFlagWithValidationOrFail(NodeCmd, "fantomRPC", "Fantom Websocket RPC URL", "ws://eth-devnet:8545", []string{"ws", "wss"})
+	fantomRPC = node.RegisterFlagWithValidationOrFail(NodeCmd, "fantomRPC", "Fantom Websocket RPC URL", "ws://eth-devnet:8545", []string{"ws", "wss", "https", "http"})
 	fantomContract = NodeCmd.Flags().String("fantomContract", "", "Fantom contract address")
 
 	karuraRPC = node.RegisterFlagWithValidationOrFail(NodeCmd, "karuraRPC", "Karura RPC URL", "ws://eth-devnet:8545", []string{"ws", "wss"})
@@ -429,6 +432,9 @@ func init() {
 
 	monadDevnetRPC = node.RegisterFlagWithValidationOrFail(NodeCmd, "monadDevnetRPC", "Monad Devnet RPC URL", "ws://eth-devnet:8545", []string{"ws", "wss"})
 	monadDevnetContract = NodeCmd.Flags().String("monadDevnetContract", "", "Monad Devnet contract address")
+
+	ultronRPC = node.RegisterFlagWithValidationOrFail(NodeCmd, "ultronRPC", "Ultron RPC URL", "ws://eth-devnet:8545", []string{"http", "https", "ws", "wss"})
+	ultronContract = NodeCmd.Flags().String("ultronContract", "", "Ultron contract address")
 
 	logLevel = NodeCmd.Flags().String("logLevel", "info", "Logging level (debug, info, warn, error, dpanic, panic, fatal)")
 	publicRpcLogDetailStr = NodeCmd.Flags().String("publicRpcLogDetail", "full", "The detail with which public RPC requests shall be logged (none=no logging, minimal=only log gRPC methods, full=log gRPC method, payload (up to 200 bytes) and user agent (up to 200 bytes))")
@@ -799,6 +805,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	*snaxchainContract = checkEvmArgs(logger, *snaxchainRPC, *snaxchainContract, "snaxchain", true)
 	*unichainContract = checkEvmArgs(logger, *unichainRPC, *unichainContract, "unichain", false)
 	*worldchainContract = checkEvmArgs(logger, *worldchainRPC, *worldchainContract, "worldchain", false)
+	*ultronContract = checkEvmArgs(logger, *ultronRPC, *ultronContract, "ultron", true)
 
 	// These chains will only ever be testnet / devnet.
 	*sepoliaContract = checkEvmArgs(logger, *sepoliaRPC, *sepoliaContract, "sepolia", false)
@@ -911,6 +918,7 @@ func runNode(cmd *cobra.Command, args []string) {
 	rpcMap["celoRPC"] = *celoRPC
 	rpcMap["ethRPC"] = *ethRPC
 	rpcMap["fantomRPC"] = *fantomRPC
+	rpcMap["ultronRPC"] = *ultronRPC
 	rpcMap["ibcBlockHeightURL"] = *ibcBlockHeightURL
 	rpcMap["ibcLCD"] = *ibcLCD
 	rpcMap["ibcWS"] = *ibcWS
@@ -1190,6 +1198,18 @@ func runNode(cmd *cobra.Command, args []string) {
 		wc := &evm.WatcherConfig{
 			NetworkID:        "fantom",
 			ChainID:          vaa.ChainIDFantom,
+			Rpc:              *fantomRPC,
+			Contract:         *fantomContract,
+			CcqBackfillCache: *ccqBackfillCache,
+		}
+
+		watcherConfigs = append(watcherConfigs, wc)
+	}
+
+	if shouldStart(fantomRPC) {
+		wc := &evm.WatcherConfig{
+			NetworkID:        "ultron",
+			ChainID:          vaa.ChainIDUltron,
 			Rpc:              *fantomRPC,
 			Contract:         *fantomContract,
 			CcqBackfillCache: *ccqBackfillCache,
