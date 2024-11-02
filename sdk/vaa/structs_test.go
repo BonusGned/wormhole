@@ -86,6 +86,7 @@ func TestChainIDFromString(t *testing.T) {
 		{input: "holesky", output: ChainIDHolesky},
 		{input: "polygon_sepolia", output: ChainIDPolygonSepolia},
 		{input: "monad_devnet", output: ChainIDMonadDevnet},
+		{input: "ultron", output: ChainIDUltron},
 
 		{input: "Solana", output: ChainIDSolana},
 		{input: "Ethereum", output: ChainIDEthereum},

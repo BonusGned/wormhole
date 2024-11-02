@@ -1210,8 +1210,8 @@ func runNode(cmd *cobra.Command, args []string) {
 		wc := &evm.WatcherConfig{
 			NetworkID:        "ultron",
 			ChainID:          vaa.ChainIDUltron,
-			Rpc:              *fantomRPC,
-			Contract:         *fantomContract,
+			Rpc:              *ultronRPC,
+			Contract:         *ultronContract,
 			CcqBackfillCache: *ccqBackfillCache,
 		}
 
