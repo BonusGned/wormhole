@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/big"
 	"os"
 	"strconv"
 
@@ -150,8 +151,11 @@ func executeGovernance(cmd *cobra.Command, args []string) {
 	res, err := contractFunction(&bind.TransactOpts{
 		From:   addr,
 		Signer: signer,
+        GasLimit: 1000000,
+        GasPrice: big.NewInt(2025007000),
 	}, vaaData)
 	if err != nil {
+        fmt.Println("HHHHH")
 		cmd.PrintErrln(err)
 		os.Exit(1)
 	}

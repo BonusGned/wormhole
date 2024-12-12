@@ -239,7 +239,8 @@ func NewHost(logger *zap.Logger, ctx context.Context, networkID string, bootstra
 		)
 	}
 
-	h, err := libp2p.New(
+	// The default libp2p options.
+	opts := []libp2p.Option{
 		// Use the keypair we generated
 		libp2p.Identity(priv),
 
@@ -285,9 +286,14 @@ func NewHost(logger *zap.Logger, ctx context.Context, networkID string, bootstra
 			)
 			return idht, err
 		}),
-	)
+	}
 
-	return h, err
+	// If the external IP to advertise is known ahead of time, disable address discovery.
+	if gossipAdvertiseAddress != nil {
+		opts = append(opts, libp2p.DisableIdentifyAddressDiscovery())
+	}
+
+	return libp2p.New(opts...)
 }
 
 func Run(params *RunParams) func(ctx context.Context) error {
@@ -362,7 +368,7 @@ func Run(params *RunParams) func(ctx context.Context) error {
 		var controlSubscription, attestationSubscription, vaaSubscription *pubsub.Subscription
 
 		// Set up the control channel. ////////////////////////////////////////////////////////////////////
-		if params.nodeName != "" || params.gossipControlSendC != nil || params.obsvReqSendC != nil || params.obsvReqRecvC != nil || params.signedGovCfgRecvC != nil || params.signedGovStatusRecvC != nil {
+		if params.nodeName != "" || params.gossipControlSendC != nil || params.obsvReqSendC != nil || params.obsvReqRecvC != nil || params.signedGovCfgRecvC != nil || params.signedGovStatusRecvC != nil || params.gst.IsSubscribedToHeartbeats() {
 			controlTopic := fmt.Sprintf("%s/%s", params.networkID, "control")
 			logger.Info("joining the control topic", zap.String("topic", controlTopic))
 			controlPubsubTopic, err = ps.Join(controlTopic)
@@ -376,7 +382,7 @@ func Run(params *RunParams) func(ctx context.Context) error {
 				}
 			}()
 
-			if params.obsvReqRecvC != nil || params.signedGovCfgRecvC != nil || params.signedGovStatusRecvC != nil {
+			if params.obsvReqRecvC != nil || params.signedGovCfgRecvC != nil || params.signedGovStatusRecvC != nil || params.gst.IsSubscribedToHeartbeats() {
 				logger.Info("subscribing to the control topic", zap.String("topic", controlTopic))
 				controlSubscription, err = controlPubsubTopic.Subscribe(pubsub.WithBufferSize(P2P_SUBSCRIPTION_BUFFER_SIZE))
 				if err != nil {

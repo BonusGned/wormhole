@@ -61,8 +61,8 @@ jq '.account.data[0]' "$account_json" | sed s/\"//g | base64 -d > "$account_dump
 # Set the block size to 37 bytes and skip the first block.
 dd bs=37 skip=1 if="$account_dump" of=/tmp/bytecode.dump 2>/dev/null
 
-hash1=$(sha256sum /tmp/bytecode.dump | cut -f1 -d' ')
-hash2=$(sha256sum "$obj_file" | cut -f1 -d' ')
+hash1=$(shasum -a 256 /tmp/bytecode.dump | cut -f1 -d' ')
+hash2=$(shasum -a 256 "$obj_file" | cut -f1 -d' ')
 
 echo "Deployed bytecode hash (on $network):"
 echo "$hash1"

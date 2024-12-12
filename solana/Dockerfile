@@ -40,4 +40,3 @@ RUN --mount=type=cache,target=target,id=build \
 
 FROM scratch AS export-stage
 COPY --from=builder /opt/solana/deps /
-

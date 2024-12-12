@@ -7,12 +7,14 @@ nft_bridge_ADDRESS_mainnet=WnFt12ZrnzZrFZkt2xsNsaNWoQribnuQ5B5FrDbwDhD
 nft_bridge_AUTHORITY_mainnet=3cVZHphy4QUYnU1hYFyvHF9joeZJ6ZTxpWx1nzavaUa8
 
 # Testnet buffer authority is the deployer public key
-bridge_ADDRESS_testnet=3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5
-bridge_AUTHORITY_testnet=9r6q2iEg4MBevjC8reaLmQUDxueF3vabUoqDkZ2LoAYe
+# bridge_ADDRESS_testnet=3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5
+bridge_ADDRESS_testnet=25xyTc2vmJLxPWg4fewf7t4tvHdwFHacLeUXXofyXzbu
+# bridge_AUTHORITY_testnet=9r6q2iEg4MBevjC8reaLmQUDxueF3vabUoqDkZ2LoAYe
+bridge_AUTHORITY_testnet=8ttCwTkCguxSnfdFjtcHjknYZ9qtv7eZRHjqYYvW5jte
 token_bridge_ADDRESS_testnet=DZnkkTmCiFWfYTfT41X3Rd1kDgozqzxWaHqsw6W4x2oe
-token_bridge_AUTHORITY_testnet=9r6q2iEg4MBevjC8reaLmQUDxueF3vabUoqDkZ2LoAYe
+token_bridge_AUTHORITY_testnet=8ttCwTkCguxSnfdFjtcHjknYZ9qtv7eZRHjqYYvW5jte
 nft_bridge_ADDRESS_testnet=2rHhojZ7hpu1zA91nvZmT8TqWWvMcKmmNBCr2mKTtMq4
-nft_bridge_AUTHORITY_testnet=9r6q2iEg4MBevjC8reaLmQUDxueF3vabUoqDkZ2LoAYe
+nft_bridge_AUTHORITY_testnet=8ttCwTkCguxSnfdFjtcHjknYZ9qtv7eZRHjqYYvW5jte
 
 # Devnet buffer authority is the devnet public key
 bridge_ADDRESS_devnet=Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o
@@ -43,7 +45,7 @@ artifacts-$(NETWORK): $(SOURCE_FILES)
 	echo $@
 	@echo "Building artifacts for ${NETWORK} (${bridge_ADDRESS_${NETWORK}})"
 	DOCKER_BUILDKIT=1 docker build -f Dockerfile --build-arg BRIDGE_ADDRESS=${bridge_ADDRESS_${NETWORK}} -o $@ .
-	cd $@ && ls | xargs sha256sum > checksums.txt
+	cd $@ && ls | xargs shasum -a 256 > checksums.txt
 
 payer-$(NETWORK).json:
 	$(error Missing private key in payer-$(NETWORK).json)

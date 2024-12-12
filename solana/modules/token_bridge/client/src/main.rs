@@ -79,11 +79,12 @@ fn command_init_bridge(config: &Config, bridge: &Pubkey, core_bridge: &Pubkey) -
     println!("config account: {}, ", ix.accounts[1].pubkey);
     let mut transaction = Transaction::new_with_payer(&[ix], Some(&config.fee_payer.pubkey()));
 
-    let (recent_blockhash, fee_calculator) = config.rpc_client.get_recent_blockhash()?;
-    check_fee_payer_balance(
-        config,
-        minimum_balance_for_rent_exemption + fee_calculator.calculate_fee(transaction.message()),
-    )?;
+    // let (recent_blockhash, fee_calculator) = config.rpc_client.get_recent_blockhash()?;
+    let recent_blockhash = config.rpc_client.get_latest_blockhash()?;
+    // check_fee_payer_balance(
+    //     config,
+    //     minimum_balance_for_rent_exemption + fee_calculator.calculate_fee(transaction.message()),
+    // )?;
     transaction.sign(&[&config.fee_payer, &config.owner], recent_blockhash);
     Ok(Some(transaction))
 }

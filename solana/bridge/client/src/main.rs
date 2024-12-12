@@ -99,12 +99,15 @@ fn command_deploy_bridge(
     .unwrap();
     println!("config account: {}, ", ix.accounts[0].pubkey);
     let mut transaction = Transaction::new_with_payer(&[ix], Some(&config.fee_payer.pubkey()));
+    println!("fee_payer: {}, ", &config.fee_payer.pubkey());
 
-    let (recent_blockhash, fee_calculator) = config.rpc_client.get_recent_blockhash()?;
-    check_fee_payer_balance(
-        config,
-        minimum_balance_for_rent_exemption + fee_calculator.calculate_fee(transaction.message()),
-    )?;
+    // let (recent_blockhash, fee_calculator) = config.rpc_client.get_recent_blockhash()?;
+    let recent_blockhash = config.rpc_client.get_latest_blockhash()?;
+    // let fee_calculator = config.rpc_client.get_fee_calculator_for_blockhash(&recent_blockhash).unwrap().unwrap();
+    // check_fee_payer_balance(
+    //     config,
+    //     minimum_balance_for_rent_exemption + fee_calculator.calculate_fee(transaction.message()),
+    // )?;
     transaction.sign(&[&config.fee_payer, &config.owner], recent_blockhash);
     Ok(Some(transaction))
 }
@@ -338,8 +341,11 @@ fn main() {
         } else {
             solana_cli_config::Config::default()
         };
-        let json_rpc_url = value_t!(matches, "json_rpc_url", String)
-            .unwrap_or_else(|_| cli_config.json_rpc_url.clone());
+        // let json_rpc_url = value_t!(matches, "json_rpc_url", String)
+        //     .unwrap_or_else(|_| cli_config.json_rpc_url.clone());
+        let json_rpc_url = "https://api.devnet.solana.com/";
+        println!("json_rpc_url: {}", json_rpc_url);
+        println!("keypair_path: {}", cli_config.keypair_path);
 
         let client_keypair = || {
             read_keypair_file(&cli_config.keypair_path).unwrap_or_else(|err| {
@@ -491,6 +497,7 @@ where
 }
 
 fn check_fee_payer_balance(config: &Config, required_balance: u64) -> Result<(), Error> {
+    println!("Checking fee payer balance");
     let balance = config
         .rpc_client
         .get_balance_with_commitment(
@@ -500,6 +507,7 @@ fn check_fee_payer_balance(config: &Config, required_balance: u64) -> Result<(),
             },
         )?
         .value;
+    println!("Fee payer balance: {}", lamports_to_sol(balance));
     if balance < required_balance {
         Err(format!(
             "Fee payer, {}, has insufficient balance: {} required, {} available",
