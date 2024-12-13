@@ -50,6 +50,8 @@ import (
 )
 
 var (
+	recheckAddr *string
+
 	p2pNetworkID *string
 	p2pPort      *uint
 	p2pBootstrap *string
@@ -267,6 +269,8 @@ var (
 )
 
 func init() {
+	recheckAddr = NodeCmd.Flags().String("recheckAddr", "[::]:6061", "Listen address for recheck server (disabled if blank)")
+
 	p2pNetworkID = NodeCmd.Flags().String("network", "", "P2P network identifier (optional, overrides default for environment)")
 	p2pPort = NodeCmd.Flags().Uint("port", p2p.DefaultPort, "P2P UDP listener port")
 	p2pBootstrap = NodeCmd.Flags().String("bootstrap", "", "P2P bootstrap peers (optional for mainnet or testnet, overrides default, required for unsafeDevMode)")
@@ -1206,7 +1210,7 @@ func runNode(cmd *cobra.Command, args []string) {
 		watcherConfigs = append(watcherConfigs, wc)
 	}
 
-	if shouldStart(fantomRPC) {
+	if shouldStart(ultronRPC) {
 		wc := &evm.WatcherConfig{
 			NetworkID:        "ultron",
 			ChainID:          vaa.ChainIDUltron,
@@ -1694,6 +1698,17 @@ func runNode(cmd *cobra.Command, args []string) {
 				node.GuardianOptionPublicWeb(*publicWeb, *publicGRPCSocketPath, *tlsHostname, *tlsProdEnv, path.Join(*dataDir, "autocert")),
 			)
 		}
+	}
+	if shouldStart(recheckAddr) {
+		guardianOptions = append(guardianOptions, node.GuardianOptionRecheckHandler(
+			logger,
+			*recheckAddr,
+			*adminSocketPath,
+			*ethRPC,
+			*ethContract,
+			*solanaRPC,
+			*solanaContract,
+		))
 	}
 
 	// Run supervisor with Guardian Node as root.

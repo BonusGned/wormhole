@@ -23,6 +23,9 @@ import (
 	"github.com/certusone/wormhole/node/pkg/watchers/ibc"
 	"github.com/certusone/wormhole/node/pkg/watchers/interfaces"
 	"github.com/certusone/wormhole/node/pkg/wormconn"
+	eth_common "github.com/ethereum/go-ethereum/common"
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/gorilla/mux"
 	libp2p_crypto "github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -35,6 +38,41 @@ type GuardianOption struct {
 	name         string
 	dependencies []string                                     // Array of other option's `name`. These options need to be configured before this option. Dependencies are enforced at runtime.
 	f            func(context.Context, *zap.Logger, *G) error // Function that is run by the constructor to initialize this component.
+}
+
+func GuardianOptionRecheckHandler(
+	logger *zap.Logger,
+	address string,
+	adminRPC string,
+	ethRPC string,
+	ethContract string,
+	solanaRPC string,
+	solanaContract string,
+) *GuardianOption {
+
+	return &GuardianOption{
+		name:         "recheck",
+		dependencies: []string{"admin-service", "db", "governor"}, // Depends on admin RPC being available
+		f: func(ctx context.Context, logger *zap.Logger, g *G) error {
+			recheckHttpService, err := recheckHttpServiceRunnable(
+				logger,
+				address,
+				adminRPC,
+				g.db,
+				g.gst,
+				g.gov,
+				ethRPC,
+				ethContract,
+				solanaRPC,
+				solanaContract,
+			)
+			if err != nil {
+				return fmt.Errorf("failed to create http service: %w", err)
+			}
+			g.runnables["recheck"] = recheckHttpService
+			return nil
+		},
+	}
 }
 
 // GuardianOptionP2P configures p2p networking.
