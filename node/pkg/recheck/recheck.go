@@ -47,13 +47,14 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-var AVALIABLE_CHAIN_IDS = [2]uint8{1, 2}
+var AVALIABLE_CHAIN_IDS_MAP = map[string]bool{
+	"1": true,
+	"2": true,
+}
 
-func checkChainID(chainID uint8) bool {
-	for _, cid := range AVALIABLE_CHAIN_IDS {
-		if cid == chainID {
-			return true
-		}
+func checkChainID(chainID string) bool {
+	if _, ok := AVALIABLE_CHAIN_IDS_MAP[chainID]; ok {
+		return true
 	}
 	return false
 }
@@ -88,7 +89,7 @@ func NewRecheckServer(
 	}, nil
 }
 func (s *RecheckServer) RegisterRoutes(r *mux.Router) {
-    r.HandleFunc("/recheck", s.handleObservationRequest).Methods(http.MethodPost)
+	r.HandleFunc("/v1/recheck", s.handleObservationRequest).Methods(http.MethodPost)
 }
 
 func (s *RecheckServer) handleObservationRequest(w http.ResponseWriter, r *http.Request) {
@@ -105,7 +106,7 @@ func (s *RecheckServer) handleObservationRequest(w http.ResponseWriter, r *http.
 
 	// Validate chain ID
 	chainID, err := vaa.ChainIDFromString(req.ChainID)
-	if !checkChainID(uint8(chainID)) {
+	if !checkChainID(req.ChainID) {
 		writeJSONError(w, "Invalid chain ID", http.StatusBadRequest)
 		return
 	}
