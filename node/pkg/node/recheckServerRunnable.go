@@ -40,8 +40,6 @@ func recheckHttpServiceRunnable(
 
 	return func(ctx context.Context) error {
 		// Connect to guardian admin RPC
-		ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
-		defer cancel()
 		ethContract := eth_common.HexToAddress(ethContract)
 		solanaContract := solana.MustPublicKeyFromBase58(solanaContract)
 		baseConnector, err := connectors.NewEthereumBaseConnector(ctx, "Ultron", ethUrl, ethContract, logger)
@@ -54,7 +52,6 @@ func recheckHttpServiceRunnable(
 		if err != nil {
 			return fmt.Errorf("failed to connect to admin RPC %s: %v", adminRPC, err)
 		}
-		defer conn.Close()
 
 		adminClient := nodev1.NewNodePrivilegedServiceClient(conn)
 
@@ -86,7 +83,7 @@ func recheckHttpServiceRunnable(
 
 		errC := make(chan error)
 		go func() {
-			logger.Info("HTTP server listening", zap.String("addr", srv.Addr))
+			logger.Info("Recheck HTTP server listening", zap.String("addr", srv.Addr))
 			errC <- srv.ListenAndServe()
 		}()
 
@@ -99,12 +96,12 @@ func recheckHttpServiceRunnable(
 			defer cancel()
 
 			if err := srv.Shutdown(shutdownCtx); err != nil {
-				logger.Error("HTTP server shutdown error", zap.Error(err))
+				logger.Error("Recheck HTTP server shutdown error", zap.Error(err))
 				return err
 			}
 			return ctx.Err()
 		case err := <-errC:
-			return fmt.Errorf("HTTP server error: %w", err)
+			return fmt.Errorf("Recheck HTTP server error: %w", err)
 		}
 	}, nil
 }

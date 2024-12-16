@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/certusone/wormhole/node/pkg/common"
 	"github.com/certusone/wormhole/node/pkg/db"
@@ -48,8 +47,8 @@ type ErrorResponse struct {
 }
 
 var AVALIABLE_CHAIN_IDS_MAP = map[string]bool{
-	"1": true,
-	"2": true,
+	"solana":   true,
+	"ethereum": true,
 }
 
 func checkChainID(chainID string) bool {
@@ -123,13 +122,33 @@ func (s *RecheckServer) handleObservationRequest(w http.ResponseWriter, r *http.
 		}
 
 		txHash := eth_common.HexToHash(txHash)
-		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		_, msgs, err := evm.MessageEventsForTransaction(ctx, s.ethConnector, *s.ethContract, chainID, txHash)
 		// Send observation request
 		if len(msgs) == 0 {
 			writeJSONError(w, "Invalid transaction hash", http.StatusBadRequest)
 			return
+		}
+		for _, msg := range msgs {
+
+			_, err := s.db.GetSignedVAABytes(db.VAAID{
+				EmitterChain:   chainID,
+				EmitterAddress: msg.EmitterAddress,
+				Sequence:       msg.Sequence,
+			})
+
+			if err != nil {
+				if err == db.ErrVAANotFound {
+					continue
+				}
+				s.logger.Error("failed to fetch VAA", zap.Error(err), zap.Any("request", req))
+				writeJSONError(w, fmt.Sprintf("Failed to fetch VAA: %v", err), http.StatusInternalServerError)
+				return
+			} else {
+				msg := fmt.Sprintf("VAA already exists: emitterChain=%d emitterAddress=%s sequence=%d txHash=%s", msg.EmitterChain, msg.EmitterAddress, msg.Sequence, msg.TxHash)
+				writeJSONError(w, msg, http.StatusBadRequest)
+				return
+			}
 		}
 
 		_, err = s.adminClient.SendObservationRequest(ctx, &nodev1.SendObservationRequestRequest{
