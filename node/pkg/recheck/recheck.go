@@ -1,7 +1,6 @@
 package recheck
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -10,9 +9,7 @@ import (
 	"github.com/certusone/wormhole/node/pkg/common"
 	"github.com/certusone/wormhole/node/pkg/db"
 	"github.com/certusone/wormhole/node/pkg/governor"
-	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
 	nodev1 "github.com/certusone/wormhole/node/pkg/proto/node/v1"
-	"github.com/certusone/wormhole/node/pkg/watchers/evm"
 	"github.com/certusone/wormhole/node/pkg/watchers/evm/connectors"
 	"github.com/certusone/wormhole/node/pkg/watchers/evm/connectors/ethabi"
 	abi2 "github.com/ethereum/go-ethereum/accounts/abi"
@@ -113,56 +110,19 @@ func (s *RecheckServer) handleObservationRequest(w http.ResponseWriter, r *http.
 		writeJSONError(w, fmt.Sprintf("Invalid chain ID: %v", err), http.StatusBadRequest)
 		return
 	}
-
 	// Validate and normalize transaction hash
-	for _, txHash := range req.TransactionHashs {
-		if !strings.HasPrefix(txHash, "0x") {
-			writeJSONError(w, "Invalid transaction hash", http.StatusBadRequest)
-			return
-		}
-
-		txHash := eth_common.HexToHash(txHash)
-		ctx := context.Background()
-		_, msgs, err := evm.MessageEventsForTransaction(ctx, s.ethConnector, *s.ethContract, chainID, txHash)
-		// Send observation request
-		if len(msgs) == 0 {
-			writeJSONError(w, "Invalid transaction hash", http.StatusBadRequest)
-			return
-		}
-		for _, msg := range msgs {
-
-			_, err := s.db.GetSignedVAABytes(db.VAAID{
-				EmitterChain:   chainID,
-				EmitterAddress: msg.EmitterAddress,
-				Sequence:       msg.Sequence,
-			})
-
-			if err != nil {
-				if err == db.ErrVAANotFound {
-					continue
-				}
-				s.logger.Error("failed to fetch VAA", zap.Error(err), zap.Any("request", req))
-				writeJSONError(w, fmt.Sprintf("Failed to fetch VAA: %v", err), http.StatusInternalServerError)
-				return
-			} else {
-				msg := fmt.Sprintf("VAA already exists: emitterChain=%d emitterAddress=%s sequence=%d txHash=%s", msg.EmitterChain, msg.EmitterAddress, msg.Sequence, msg.TxHash)
-				writeJSONError(w, msg, http.StatusBadRequest)
-				return
-			}
-		}
-
-		_, err = s.adminClient.SendObservationRequest(ctx, &nodev1.SendObservationRequestRequest{
-			ObservationRequest: &gossipv1.ObservationRequest{
-				ChainId: uint32(chainID),
-				TxHash:  txHash.Bytes(),
-			},
-		})
-		if err != nil {
-			writeJSONError(w, fmt.Sprintf("Failed to send observation request: %v", err), http.StatusInternalServerError)
-			return
-		}
-
+	var status bool
+	switch chainID {
+	case vaa.ChainIDEthereum:
+		status = checkAndSendObservationEVM(s, w, req, chainID)
+	case vaa.ChainIDSolana:
+		status = checkAndSendObservationSolana(s, w, req, chainID)
 	}
+	if !status {
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
 	json.NewEncoder(w).Encode(map[string]string{
 		"status": "observation request sent",

@@ -29,7 +29,7 @@ func handleReobservationRequests(
 	}
 
 	cache := make(map[cachedRequest]time.Time)
-	ticker := clock.Ticker(7 * time.Minute)
+	ticker := clock.Ticker(3 * time.Minute)
 	for {
 		select {
 		case <-ctx.Done():
@@ -37,7 +37,7 @@ func handleReobservationRequests(
 		case <-ticker.C:
 			now := clock.Now()
 			for r, t := range cache {
-				if now.Sub(t) > 11*time.Minute {
+				if now.Sub(t) > 5*time.Minute {
 					delete(cache, r)
 				}
 			}
