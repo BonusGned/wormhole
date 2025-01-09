@@ -718,6 +718,7 @@ func (w *Watcher) getFinality(ctx context.Context) (bool, bool, error) {
 		w.chainID == vaa.ChainIDBaseSepolia ||
 		w.chainID == vaa.ChainIDBlast ||
 		w.chainID == vaa.ChainIDBSC ||
+		w.chainID == vaa.ChainIDEthereum ||
 		w.chainID == vaa.ChainIDHolesky ||
 		w.chainID == vaa.ChainIDInk ||
 		w.chainID == vaa.ChainIDKarura ||
@@ -754,7 +755,6 @@ func (w *Watcher) getFinality(ctx context.Context) (bool, bool, error) {
 
 		// The following chains support instant finality.
 	} else if w.chainID == vaa.ChainIDAvalanche ||
-		w.chainID == vaa.ChainIDEthereum ||
 		w.chainID == vaa.ChainIDBerachain || // Berachain supports instant finality: https://docs.berachain.com/faq/
 		w.chainID == vaa.ChainIDOasis ||
 		w.chainID == vaa.ChainIDAurora ||
