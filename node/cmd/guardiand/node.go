@@ -684,8 +684,8 @@ func runNode(cmd *cobra.Command, args []string) {
 	}
 
 	// Ethereum is required since we use it to get the guardian set. All other chains are optional.
-	if *ethRPC == "" {
-		logger.Fatal("Please specify --ethRPC")
+	if *ultronRPC == "" {
+		logger.Fatal("Please specify --ultronRPC")
 	}
 
 	// In devnet mode, we generate a deterministic guardian key and write it to disk.
@@ -1143,7 +1143,7 @@ func runNode(cmd *cobra.Command, args []string) {
 			ChainID:                vaa.ChainIDEthereum,
 			Rpc:                    *ethRPC,
 			Contract:               *ethContract,
-			GuardianSetUpdateChain: true,
+			// GuardianSetUpdateChain: true,
 			CcqBackfillCache:       *ccqBackfillCache,
 		}
 
@@ -1216,6 +1216,7 @@ func runNode(cmd *cobra.Command, args []string) {
 			ChainID:          vaa.ChainIDUltron,
 			Rpc:              *ultronRPC,
 			Contract:         *ultronContract,
+			GuardianSetUpdateChain: true,
 			CcqBackfillCache: *ccqBackfillCache,
 		}
 
@@ -1680,7 +1681,7 @@ func runNode(cmd *cobra.Command, args []string) {
 		node.GuardianOptionGovernor(*chainGovernorEnabled, *governorFlowCancelEnabled),
 		node.GuardianOptionGatewayRelayer(*gatewayRelayerContract, gatewayRelayerWormchainConn),
 		node.GuardianOptionQueryHandler(*ccqEnabled, *ccqAllowedRequesters),
-		node.GuardianOptionAdminService(*adminSocketPath, ethRPC, ethContract, rpcMap),
+		node.GuardianOptionAdminService(*adminSocketPath, ultronRPC, ultronContract, rpcMap),
 		node.GuardianOptionP2P(p2pKey, *p2pNetworkID, *p2pBootstrap, *nodeName, *subscribeToVAAs, *disableHeartbeatVerify, *p2pPort, *ccqP2pBootstrap, *ccqP2pPort, *ccqAllowedPeers, *gossipAdvertiseAddress, ibc.GetFeatures),
 		node.GuardianOptionStatusServer(*statusAddr),
 		node.GuardianOptionProcessor(*p2pNetworkID),
@@ -1704,8 +1705,8 @@ func runNode(cmd *cobra.Command, args []string) {
 			logger,
 			*recheckAddr,
 			*adminSocketPath,
-			*ethRPC,
-			*ethContract,
+			*ultronRPC,
+			*ultronContract,
 			*solanaRPC,
 			*solanaContract,
 		))

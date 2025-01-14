@@ -46,6 +46,7 @@ type ErrorResponse struct {
 var AVALIABLE_CHAIN_IDS_MAP = map[string]bool{
 	"solana":   true,
 	"ethereum": true,
+	"ultron":   true,
 }
 
 func checkChainID(chainID string) bool {
@@ -113,7 +114,7 @@ func (s *RecheckServer) handleObservationRequest(w http.ResponseWriter, r *http.
 	// Validate and normalize transaction hash
 	var status bool
 	switch chainID {
-	case vaa.ChainIDEthereum:
+	case vaa.ChainIDUltron:
 		status = checkAndSendObservationEVM(s, w, req, chainID)
 	case vaa.ChainIDSolana:
 		status = checkAndSendObservationSolana(s, w, req, chainID)
