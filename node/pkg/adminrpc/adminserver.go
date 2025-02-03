@@ -234,7 +234,7 @@ func recoverChainId(req *nodev1.RecoverChainId, timestamp time.Time, guardianSet
 
 // SetMessageFee converts a nodev1.SetMessageFee message to its canonical VAA representation.
 // Returns an error if the data is invalid.
-func SetMessageFee(req *nodev1.RecoverChainId, timestamp time.Time, guardianSetIndex uint32, nonce uint32, sequence uint64) (*vaa.VAA, error) {
+func SetMessageFee(req *nodev1.SetMessageFee, timestamp time.Time, guardianSetIndex uint32, nonce uint32, sequence uint64) (*vaa.VAA, error) {
 	new_fee_big := big.NewInt(0)
 	new_fee_big, ok := new_fee_big.SetString(req.NewFee, 10)
 	if !ok {
