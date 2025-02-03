@@ -232,6 +232,38 @@ func recoverChainId(req *nodev1.RecoverChainId, timestamp time.Time, guardianSet
 	return v, nil
 }
 
+// SetMessageFee converts a nodev1.SetMessageFee message to its canonical VAA representation.
+// Returns an error if the data is invalid.
+func SetMessageFee(req *nodev1.RecoverChainId, timestamp time.Time, guardianSetIndex uint32, nonce uint32, sequence uint64) (*vaa.VAA, error) {
+	new_fee_big := big.NewInt(0)
+	new_fee_big, ok := new_fee_big.SetString(req.NewFee, 10)
+	if !ok {
+		return nil, errors.New("invalid new_fee")
+	}
+
+	// uint256 has Bytes32 method for easier serialization
+	new_fee, overflow := uint256.FromBig(new_fee_big)
+	if overflow {
+		return nil, errors.New("new_fee overflow")
+	}
+
+	// if req.NewFee > math.MaxUint256 {
+	// 	return nil, errors.New("invalid new_fee")
+	// }
+
+	body, err := vaa.BodySetMessageFee{
+		Module:     req.Module,
+		NewFee: new_fee,
+	}.Serialize()
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to serialize governance body: %w", err)
+	}
+
+	v := vaa.CreateGovernanceVAA(timestamp, nonce, sequence, guardianSetIndex, body)
+	return v, nil
+}
+
 // accountantModifyBalance converts a nodev1.AccountantModifyBalance message to its canonical VAA representation.
 // Returns an error if the data is invalid.
 func accountantModifyBalance(req *nodev1.AccountantModifyBalance, timestamp time.Time, guardianSetIndex uint32, nonce uint32, sequence uint64) (*vaa.VAA, error) {
@@ -731,6 +763,8 @@ func GovMsgToVaa(message *nodev1.GovernanceMessage, currentSetIndex uint32, time
 		v, err = tokenBridgeUpgradeContract(payload.BridgeContractUpgrade, timestamp, currentSetIndex, message.Nonce, message.Sequence)
 	case *nodev1.GovernanceMessage_RecoverChainId:
 		v, err = recoverChainId(payload.RecoverChainId, timestamp, currentSetIndex, message.Nonce, message.Sequence)
+	case *nodev1.GovernanceMessage_SetMessageFee:
+		v, err = SetMessageFee(payload.SetMessageFee, timestamp, currentSetIndex, message.Nonce, message.Sequence)
 	case *nodev1.GovernanceMessage_AccountantModifyBalance:
 		v, err = accountantModifyBalance(payload.AccountantModifyBalance, timestamp, currentSetIndex, message.Nonce, message.Sequence)
 	case *nodev1.GovernanceMessage_WormchainStoreCode:

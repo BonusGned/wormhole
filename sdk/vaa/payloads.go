@@ -148,6 +148,13 @@ type (
 		NewChainID ChainID
 	}
 
+	// SetMessageFee is a governance message to recover a chain id.
+	BodySetMessageFee struct {
+		Module     string
+		NewFee *uint256.Int
+	}
+
+		
 	// BodyTokenBridgeModifyBalance is a governance message to modify accountant balances for the tokenbridge.
 	BodyAccountantModifyBalance struct {
 		Module        string
@@ -313,6 +320,21 @@ func (r BodyRecoverChainId) Serialize() ([]byte, error) {
 	MustWrite(buf, binary.BigEndian, r.EvmChainID.Bytes32())
 	// NewChainID
 	MustWrite(buf, binary.BigEndian, r.NewChainID)
+	return buf.Bytes(), nil
+}
+
+func (r BodySetMessageFee) Serialize() ([]byte, error) {
+	// Module
+	buf, err := LeftPadBytes(r.Module, 32)
+	if err != nil {
+		return nil, fmt.Errorf("failed to left pad module: %w", err)
+	}
+	// Action
+	var action GovernanceAction
+	action = ActionCoreSetMessageFee
+	MustWrite(buf, binary.BigEndian, action)
+	// NewFee
+	MustWrite(buf, binary.BigEndian, r.NewFee.Bytes32())
 	return buf.Bytes(), nil
 }
 

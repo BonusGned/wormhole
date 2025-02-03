@@ -253,6 +253,12 @@ var AdminClientRecoverChainIdCmd = &cobra.Command{
 	Run:   runRecoverChainIdTemplate,
 }
 
+var AdminClientSetMessageFeeCmd = &cobra.Command{
+	Use:   "set-message-fee",
+	Short: "SetMessageFee custom",
+	Run:   runSetMessageFeeTemplate,
+}
+
 var AdminClientAccountantModifyBalanceCmd = &cobra.Command{
 	Use:   "accountant-modify-balance",
 	Short: "Generate an empty accountant modify balance template at specified path",
@@ -515,6 +521,40 @@ func runRecoverChainIdTemplate(cmd *cobra.Command, args []string) {
 						Module:     *module,
 						EvmChainId: *recoverChainIdEvmChainId,
 						NewChainId: uint32(newChainID),
+					},
+				},
+			},
+		},
+	}
+
+	b, err := prototext.MarshalOptions{Multiline: true}.Marshal(m)
+	if err != nil {
+		log.Fatal("failed to marshal request: ", err)
+	}
+	fmt.Print(string(b))
+}
+
+func runSetMessageFeeTemplate(cmd *cobra.Command, args []string) {
+	if *module == "" {
+		log.Fatal("--module must be specified.")
+	}
+	if *setMessageFeeAmount == "" {
+		log.Fatal("--set-message-fee-amount must be specified.")
+	}
+	if _, err := isValidUint256(*setMessageFeeAmount); err != nil {
+		log.Fatal("failed to parse evm chain id as uint256:", err)
+	}
+	
+	m := &nodev1.InjectGovernanceVAARequest{
+		CurrentSetIndex: uint32(*templateGuardianIndex),
+		Messages: []*nodev1.GovernanceMessage{
+			{
+				Sequence: rand.Uint64(),
+				Nonce:    rand.Uint32(),
+				Payload: &nodev1.GovernanceMessage_SetMessageFee{
+					SubmitFee: &nodev1.SetMessageFee{
+						Module: *module,
+						NewFee: *setMessageFeeAmount,
 					},
 				},
 			},
